@@ -4,24 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Models\UserTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function userDetails()
     {
-        // Fetch all users from the 'user_table'
-        $users = UserTable::all();
-
-        if ($users->isEmpty()) {
-            return response()->json(['message' => 'No users found.'], 404);
-        }
-
-        // Return a JSON response
-        return response()->json($users);
+        // Fetch user information along with their location details
+        $userInformation = DB::table('user_table as u')
+            ->join('location_table as l', 'u.user_id', '=', 'l.user_id')
+            ->select(
+                'u.user_id',
+                DB::raw("CONCAT(u.first_name, ' ', u.surname) AS name"), // Combine first_name and surname
+                'u.email',
+                DB::raw("DATE(u.created_at) AS created_at"), // Get only the date part of created_at
+                'l.district',
+                'l.physical_address'
+            )
+            ->get();
+    
+        return response()->json($userInformation);
     }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -36,7 +43,7 @@ class UserController extends Controller
             'surname' => 'required|string|max:65',
             'phone_number' => 'required|string|max:15',
             'email' => 'required|string|email|max:65|unique:user_table',
-            'password' => 'required|string|min:8',
+            // 'password' => 'required|string|min:8',
         ]);
 
         // Hash the password
@@ -81,7 +88,7 @@ class UserController extends Controller
             'middle_name' => 'nullable|string|max:65',
             'surname' => 'sometimes|required|string|max:65',
             'phone_number' => 'sometimes|required|string|max:15',
-            'password' => 'sometimes|required|string|min:8',
+            'password' => 'nullable|required|string|min:8',
         ]);
 
         // Hash the password if it's being updated

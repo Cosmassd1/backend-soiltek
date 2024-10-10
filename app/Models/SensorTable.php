@@ -19,4 +19,10 @@ class SensorTable extends Model
     'sensor_location', 
     'installation_date'
 ];
+
+public function location()
+{
+    return $this->belongsTo(LocationTable::class, 'location_id');
+}
+
 }
